@@ -9,7 +9,7 @@ from .models import Category, Status, Tag, Task, TaskAssignment
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -37,9 +37,16 @@ class TagViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all().order_by('-id')
+    queryset = Task.objects.none()
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_serializer_context(self):
-        return {'request': self.request}
+    def get_queryset(self):
+        queryset = self.queryset
+        user = self.request.user
+        if user.is_superuser:
+            queryset = Task.objects.all().order_by('-id')
+        else:
+            queryset = Task.objects.filter(taskassignment__user=user).order_by('-id')
+
+        return queryset

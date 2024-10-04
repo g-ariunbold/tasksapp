@@ -4,16 +4,16 @@ from rest_framework import serializers
 from .models import Category, Status, Tag, Task, TaskAssignment
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['url', 'username', 'email', 'groups']
+        fields = ['id', 'username', 'email', 'groups']
 
 
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
+class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields = ['url', 'name']
+        fields = ['id', 'name']
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -73,6 +73,6 @@ class TaskSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         new_task = super().create(validated_data)
         user = self.context['request'].user
-        task_assignment = TaskAssignment.objects.create(task=new_task, user=user, created_by=user)
+        TaskAssignment.objects.create(task=new_task, user=user, created_by=user)
         
         return new_task
