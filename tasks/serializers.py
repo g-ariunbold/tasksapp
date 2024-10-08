@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Group, User
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Category, Status, Tag, Task, TaskAssignment
 
@@ -41,6 +42,7 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ['id', 'name']
 
+
 class TaskAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskAssignment
@@ -52,6 +54,7 @@ class TaskSerializer(serializers.ModelSerializer):
         source='taskassignment_set', many=True, read_only=True)
     assigned_user_ids = serializers.ListField(
         child=serializers.IntegerField(), write_only=True, required=False)
+    tags = TagSerializer(many=True, required=False)
 
     class Meta:
         model = Task
@@ -72,8 +75,10 @@ class TaskSerializer(serializers.ModelSerializer):
             TaskAssignment.objects.filter(task=task).delete()
             self._create_task_assignments(task, assigned_user_ids)
         return task
+
     def _create_task_assignments(self, task, user_ids):
-        for user_id in user_ids:
-            user = User.objects.get(id=user_id)
-            TaskAssignment.objects.create(
-                task=task, user=user, created_by=self.context['request'].user)
+        users = User.objects.filter(id__in=user_ids)
+        tasks_to_create = [TaskAssignment(task=task,
+                                          user=user,
+                                          created_by=self.context['request'].user) for user in users]
+        TaskAssignment.objects.bulk_create(tasks_to_create)
