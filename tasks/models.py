@@ -31,6 +31,7 @@ class Task(models.Model):
     sub_task = models.ForeignKey('self', on_delete=models.PROTECT, null=True)
     task_category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, related_name='tasks')
     tags = models.ManyToManyField(Tag, related_name='tasks')
+    created_by  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tasks')
 
     def __str__(self):
         return self.name

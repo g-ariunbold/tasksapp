@@ -59,12 +59,13 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ['id', 'name', 'description', 'is_completed', 'status', 'due_date', 'created_at',
-                  'updated_at', 'sub_task', 'task_category', 'tags', 'assigned_users', 'assigned_user_ids']
-        read_only_fields = ['created_at', 'updated_at']
+                  'updated_at', 'sub_task', 'task_category', 'tags', 'assigned_users', 'assigned_user_ids', 'created_by']
+        read_only_fields = ['created_at', 'updated_at', 'created_by']
 
     def create(self, validated_data):
+        user = self.context['request'].user
         assigned_user_ids = validated_data.pop('assigned_user_ids', [])
-        task = Task.objects.create(**validated_data)
+        task = Task.objects.create(created_by=user, **validated_data)
         self._create_task_assignments(task, assigned_user_ids)
         return task
 
